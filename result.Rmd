@@ -1,0 +1,53 @@
+---
+title: "SolutionAssignment"
+author: "Simona Pappalardo"
+date: "June 22, 2014"
+output: html_document
+---
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+load training data and remove NA values
+```{r}
+setwd("~/Documents/MachineLearning/data/");
+trainingOriginal = read.csv(file="pml-training.csv",na.strings=c("NA",""),header=TRUE,sep=",");
+NAs=apply(trainingOriginal,2,function(x){sum(is.na(x))});
+trainingValid=trainingOriginal[,which(NAs==0)];
+```
+partition the training data
+```{r}
+library(caret)
+trainingIndex <- createDataPartition(y = trainingValid$classe, p=0.2,list=FALSE);
+trainingData <- trainingValid[trainingIndex,]
+```
+train the model using random forest
+```{r}
+
+modFit <- train(trainingData$classe ~.,data = trainingData,method="rf")
+modFit
+
+```
+Load the testing data and remove NA values
+
+```{r}
+setwd("~/Documents/MachineLearning/data/");
+testingOriginal = read.csv("pml-testing.csv",na.strings=c("NA",""))
+NAs=apply(testingOriginal,2,function(x){sum(is.na(x))})
+testingValid=testingOriginal[,which(NAs==0)]
+
+```
+predict with the model calculated before
+```{r}
+
+predictionTrain=predict(modFit,trainingData)
+predictionTest=predict(modFit,testingValid)
+
+```
+calculate the confusionMatrix to calculate the out of sample error estimation
+
+```{r}
+
+confusionMatrix(trainingData$classe,predictionTrain)
+
+```
